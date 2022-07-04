@@ -56,8 +56,6 @@ class SearchViewController: UIViewController {
     private var movieInfoList: [MovieInfoViewModel]?
     private var totalPage: String?
     
-    private var isKeyBoard = false
-    
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         let tabBarHeight = self.tabBarController?.tabBar.frame.height ?? 49.0
@@ -82,8 +80,6 @@ class SearchViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-//        initializeHideKeyboard()
         
         pageNumberPicker.delegate = self
         pageNumberPicker.dataSource = self
@@ -116,31 +112,11 @@ class SearchViewController: UIViewController {
         tableView.reloadData()
     }
     
-    @objc func goToMovie(_ sender: UITapGestureRecognizer) {
-        if let indexPath = self.tableView.indexPathForSelectedRow {
-            let id = self.searchResult!.movieInfoList[indexPath.row].imdbID
-            let vc = ShowDetailViewController(id: id)
-            let navVC = UINavigationController(rootViewController: vc)
-            navVC.modalPresentationStyle = .fullScreen
-            present(navVC, animated: true)
-        }
-    }
-    
-    
     func addSubviews() {
         view.addSubview(searchTextField)
         view.addSubview(tableView)
         view.addSubview(searchButton)
         view.addSubview(pageTextField)
-    }
-    
-    @objc func keyboardWillAppear(_ notification: NSNotification) {
-        isKeyBoard = true
-        
-    }
-
-    @objc func keyboardWillDisappear(_ notification: NSNotification) {
-       isKeyBoard = false
     }
     
     @objc func getData() {
@@ -251,16 +227,21 @@ extension SearchViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if isKeyBoard {
+        if searchTextField.isEditing {
             self.view.endEditing(true)
-            return
+            tableView.deselectRow(at: indexPath, animated: true)
+        } else if pageTextField.isEditing {
+            self.view.endEditing(true)
+            tableView.deselectRow(at: indexPath, animated: true)
+        } else {
+            tableView.deselectRow(at: indexPath, animated: false)
+            let id = self.searchResult!.movieInfoList[indexPath.row].imdbID
+            let vc = ShowDetailViewController(id: id)
+            let navVC = UINavigationController(rootViewController: vc)
+            navVC.modalPresentationStyle = .fullScreen
+            present(navVC, animated: true)
         }
-        tableView.deselectRow(at: indexPath, animated: false)
-        let id = self.searchResult!.movieInfoList[indexPath.row].imdbID
-        let vc = ShowDetailViewController(id: id)
-        let navVC = UINavigationController(rootViewController: vc)
-        navVC.modalPresentationStyle = .fullScreen
-        present(navVC, animated: true)
+        
     }
     
 }
@@ -292,16 +273,14 @@ extension SearchViewController: UIPickerViewDelegate, UIPickerViewDataSource {
     
 }
 
-// MARK: TextField Return Key
+// MARK: TextField Settings
 
 extension SearchViewController: UITextFieldDelegate {
+    
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
-        self.getData()
+        self.view.endEditing(true)
         return true
     }
     
-    func textFieldDidEndEditing(_ textField: UITextField) {
-        
-    }
 }

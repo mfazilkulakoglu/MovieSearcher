@@ -369,27 +369,11 @@ class ShowDetailViewController: UIViewController {
                                    y: 20,
                                    width: scrollView.width - 40,
                                    height: view.height - 300)
-        titleLabel.frame = CGRect(x: 10,
-                                  y: posterImage.bottom + 15,
-                                  width: scrollView.width - 20,
-                                  height: 52)
-        yearLabel.frame = CGRect(x: 10,
-                                 y: titleLabel.bottom + 10,
-                                 width: 100,
-                                 height: 19.5)
-        yearTextLabel.frame = CGRect(x: yearLabel.right + 10,
-                                     y: yearLabel.top,
-                                     width: view.width - (yearLabel.right + 20),
-                                     height: 19.5)
-        ratedLabel.frame = CGRect(x: 10,
-                                  y: yearLabel.bottom + 10,
-                                  width: yearLabel.width,
-                                  height: 19.5)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        //        initializeHideKeyboard()
+        
         view.addSubview(loadingAnimation)
         loadingAnimation.startAnimating()
         
@@ -397,24 +381,17 @@ class ShowDetailViewController: UIViewController {
                                                            style: .plain,
                                                            target: self,
                                                            action: #selector(dismissDetail))
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [self] in
             
+            addSubviews()
             
-            self.addSubviews()
+            loadingAnimation.stopAnimating()
+            loadingAnimation.removeFromSuperview()
+            
+            view.addSubview(scrollView)
             
         }
     }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        DispatchQueue.main.async {
-            Task {
-            await self.setConstraints()
-            }
-        }
-    }
-    
-    
     
     init(id: String) {
         super.init(nibName: nil, bundle: nil)
@@ -426,13 +403,13 @@ class ShowDetailViewController: UIViewController {
             case .success(let model):
                 
                 
-                self.movieDetailViewModel = MovieDetailViewModel(movieDetail: model)
-                Task {
-                    await self.loadData(model: self.movieDetailViewModel)
+                DispatchQueue.main.async {
+                    self.movieDetailViewModel = MovieDetailViewModel(movieDetail: model)
+                    Task {
+                        self.loadData(model: self.movieDetailViewModel)
+                        self.setConstraints()
+                    }
                 }
-                
-                
-                
             }
         }
     }
@@ -449,7 +426,6 @@ class ShowDetailViewController: UIViewController {
     
     func addSubviews() {
         
-        view.addSubview(scrollView)
         scrollView.addSubview(posterImage)
         scrollView.addSubview(titleLabel)
         scrollView.addSubview(yearLabel)
@@ -495,7 +471,7 @@ class ShowDetailViewController: UIViewController {
         
     }
     
-    func loadData(model: MovieDetailViewModel) async {
+    func loadData(model: MovieDetailViewModel) {
         
         self.posterImage.sd_setImage(with: URL(string: model.poster),
                                      placeholderImage: UIImage(systemName: "square.slash"))
@@ -520,64 +496,81 @@ class ShowDetailViewController: UIViewController {
         self.boxOfficeTextLabel.text = "\(model.boxOffice ?? "N/A")"
         self.productionTextLabel.text = "\(model.production ?? "N/A")"
         self.websiteTextLabel.text = "\(model.website ?? "N/A")"
-        
-        
     }
     
-    func setConstraints() async {
+    func setConstraints() {
         
-        await setLabelsConstraints(label: ratedTextLabel, previousLabel: ratedLabel, forwardLabel: releasedLabel)
-        await setLabelsConstraints(label: releasedTextLabel, previousLabel: releasedLabel, forwardLabel: runTimeLabel)
-        await setLabelsConstraints(label: runTimeTextLabel, previousLabel: runTimeLabel, forwardLabel: genreLabel)
-        await setLabelsConstraints(label: genreTextLabel, previousLabel: genreLabel, forwardLabel: directorLabel)
-        await setLabelsConstraints(label: directorTextLabel, previousLabel: directorLabel, forwardLabel: writerLabel)
-        await setLabelsConstraints(label: writerTextLabel, previousLabel: writerLabel, forwardLabel: actorsLabel)
-        await setLabelsConstraints(label: actorsTextLabel, previousLabel: actorsLabel, forwardLabel: plotLabel)
-        await setLabelsConstraints(label: plotTextLabel, previousLabel: plotLabel, forwardLabel: languageLabel)
-        await setLabelsConstraints(label: languageTextLabel, previousLabel: languageLabel, forwardLabel: countryLabel)
-        await setLabelsConstraints(label: countryTextLabel, previousLabel: countryLabel, forwardLabel: awardsLabel)
-        await setLabelsConstraints(label: awardsTextLabel, previousLabel: awardsLabel, forwardLabel: metaScoreLabel)
-        await setLabelsConstraints(label: metaScoreTextLabel, previousLabel: metaScoreLabel, forwardLabel: imdbRatingsLabel)
-        await setLabelsConstraints(label: imdbRatingsTextLabel, previousLabel: imdbRatingsLabel, forwardLabel: imdbVotesLabel)
-        await setLabelsConstraints(label: imdbVotesTextLabel, previousLabel: imdbVotesLabel, forwardLabel: typeLabel)
-        await setLabelsConstraints(label: typeTextLabel, previousLabel: typeLabel, forwardLabel: dvdLabel)
-        await setLabelsConstraints(label: dvdTextLabel, previousLabel: dvdLabel, forwardLabel: boxOfficeLabel)
-        await setLabelsConstraints(label: boxOfficeTextLabel, previousLabel: boxOfficeLabel, forwardLabel: productionLabel)
-        await setLabelsConstraints(label: productionTextLabel, previousLabel: productionLabel, forwardLabel: websiteLabel)
-        await setRightLabelConstraints(label: websiteTextLabel, previousLabel: websiteLabel)
-        
+        setTopLabelsConstraints(label: titleLabel, forwardLabel: yearLabel)
+        setLabelsConstraints(label: yearTextLabel, previousLabel: yearLabel, forwardLabel: ratedLabel)
+        setLabelsConstraints(label: ratedTextLabel, previousLabel: ratedLabel, forwardLabel: releasedLabel)
+        setLabelsConstraints(label: releasedTextLabel, previousLabel: releasedLabel, forwardLabel: runTimeLabel)
+        setLabelsConstraints(label: runTimeTextLabel, previousLabel: runTimeLabel, forwardLabel: genreLabel)
+        setLabelsConstraints(label: genreTextLabel, previousLabel: genreLabel, forwardLabel: directorLabel)
+        setLabelsConstraints(label: directorTextLabel, previousLabel: directorLabel, forwardLabel: writerLabel)
+        setLabelsConstraints(label: writerTextLabel, previousLabel: writerLabel, forwardLabel: actorsLabel)
+        setLabelsConstraints(label: actorsTextLabel, previousLabel: actorsLabel, forwardLabel: plotLabel)
+        setLabelsConstraints(label: plotTextLabel, previousLabel: plotLabel, forwardLabel: languageLabel)
+        setLabelsConstraints(label: languageTextLabel, previousLabel: languageLabel, forwardLabel: countryLabel)
+        setLabelsConstraints(label: countryTextLabel, previousLabel: countryLabel, forwardLabel: awardsLabel)
+        setLabelsConstraints(label: awardsTextLabel, previousLabel: awardsLabel, forwardLabel: metaScoreLabel)
+        setLabelsConstraints(label: metaScoreTextLabel, previousLabel: metaScoreLabel, forwardLabel: imdbRatingsLabel)
+        setLabelsConstraints(label: imdbRatingsTextLabel, previousLabel: imdbRatingsLabel, forwardLabel: imdbVotesLabel)
+        setLabelsConstraints(label: imdbVotesTextLabel, previousLabel: imdbVotesLabel, forwardLabel: typeLabel)
+        setLabelsConstraints(label: typeTextLabel, previousLabel: typeLabel, forwardLabel: dvdLabel)
+        setLabelsConstraints(label: dvdTextLabel, previousLabel: dvdLabel, forwardLabel: boxOfficeLabel)
+        setLabelsConstraints(label: boxOfficeTextLabel, previousLabel: boxOfficeLabel, forwardLabel: productionLabel)
+        setLabelsConstraints(label: productionTextLabel, previousLabel: productionLabel, forwardLabel: websiteLabel)
+        setBottomLabelConstraints(label: websiteTextLabel, previousLabel: websiteLabel)
         self.scrollView.contentSize = CGSize(width: view.width,
                                              height: websiteTextLabel.bottom + 50)
     }
     
-    func setLabelsConstraints(label: UILabel, previousLabel: UILabel, forwardLabel: UILabel) async {
+    func setLabelsConstraints(label: UILabel, previousLabel: UILabel, forwardLabel: UILabel) {
         let rightLabelWidth = self.view.width - 120
         lazy var containerViewHeight: CGFloat = DynamicLabelSize.height(text: label.text,
                                                                         font: labelFont,
                                                                         width: rightLabelWidth)
         
-        label.self.frame = await CGRect(x: previousLabel.right + 10,
+        label.self.frame = CGRect(x: previousLabel.right + 10,
                                   y: previousLabel.top,
                                   width: scrollView.width - (previousLabel.right + 20),
                                   height: containerViewHeight)
         
-        forwardLabel.self.frame = await CGRect(x: 10,
+        forwardLabel.self.frame = CGRect(x: 10,
                                          y: label.bottom + 10,
                                          width: 100,
                                          height: 19.5)
     }
     
-    func setRightLabelConstraints(label: UILabel, previousLabel: UILabel) async {
+    func setBottomLabelConstraints(label: UILabel, previousLabel: UILabel) {
         let rightLabelWidth = self.view.width - 120
         lazy var containerViewHeight: CGFloat = DynamicLabelSize.height(text: label.text,
                                                                         font: labelFont,
                                                                         width: rightLabelWidth)
         
-        label.self.frame = await CGRect(x: previousLabel.right + 10,
+        label.self.frame = CGRect(x: previousLabel.right + 10,
                                   y: previousLabel.top,
                                   width: scrollView.width - (previousLabel.right + 20),
                                   height: containerViewHeight)
         
+    }
+    
+    func setTopLabelsConstraints(label: UILabel, forwardLabel: UILabel) {
+        let rightLabelWidth = self.view.width - 120
+        lazy var containerViewHeight: CGFloat = DynamicLabelSize.height(text: label.text,
+                                                                        font: label.font,
+                                                                        width: rightLabelWidth)
+
+        label.self.frame = CGRect(x: 20,
+                                  y: self.posterImage.bottom + 15,
+                                  width: scrollView.width - 40,
+                                  height: containerViewHeight)
+        
+        forwardLabel.self.frame = CGRect(x: 10,
+                                         y: label.bottom + 10,
+                                         width: 100,
+                                         height: 19.5)
+
     }
     
 }
